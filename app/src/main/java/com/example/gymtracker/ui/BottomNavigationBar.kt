@@ -19,6 +19,8 @@ sealed class BottomNavItem(
     object Programs : BottomNavItem(Screen.Programs.route, "Программы", Icons.Default.FitnessCenter)
     object Progress : BottomNavItem(Screen.Progress.route, "Прогресс", Icons.Default.TrendingUp)
     object History : BottomNavItem(Screen.History.route, "История", Icons.Default.History)
+    object Calendar : BottomNavItem(Screen.Calendar.route, "Календарь", Icons.Default.CalendarToday)
+    object Settings : BottomNavItem(Screen.Settings.route, "Настройки", Icons.Default.Settings)
 }
 
 @Composable
@@ -27,7 +29,9 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavItem.Home,
         BottomNavItem.Programs,
         BottomNavItem.Progress,
-        BottomNavItem.History
+        BottomNavItem.History,
+        BottomNavItem.Calendar,
+        BottomNavItem.Settings
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()

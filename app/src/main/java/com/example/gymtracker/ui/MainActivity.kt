@@ -16,6 +16,9 @@ import com.example.gymtracker.ui.foldable.rememberFoldableState
 import com.example.gymtracker.ui.navigation.GymTrackerNavigation
 import com.example.gymtracker.ui.theme.GymTrackerTheme
 import com.example.gymtracker.ui.viewmodel.ViewModelFactory
+import com.example.gymtracker.util.PreferencesManager
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,11 +32,14 @@ class MainActivity : ComponentActivity() {
             exerciseDao = database.exerciseDao(),
             goalDao = database.goalDao()
         )
-
-        val viewModelFactory = ViewModelFactory(repository)
+        
+        val preferencesManager = PreferencesManager(applicationContext)
+        val viewModelFactory = ViewModelFactory(repository, preferencesManager, applicationContext)
 
         setContent {
-            GymTrackerTheme {
+            val isDarkTheme by preferencesManager.isDarkTheme.collectAsState(initial = false)
+            
+            GymTrackerTheme(darkTheme = isDarkTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

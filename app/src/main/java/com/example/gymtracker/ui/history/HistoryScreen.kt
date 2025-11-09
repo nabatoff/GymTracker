@@ -15,6 +15,9 @@ import com.example.gymtracker.data.entity.WorkoutSession
 import com.example.gymtracker.ui.viewmodel.HistoryViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,6 +25,16 @@ fun HistoryScreen(
     viewModel: HistoryViewModel = viewModel()
 ) {
     val sessions by viewModel.sessions.collectAsStateWithLifecycle(initialValue = emptyList())
+    var isRefreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    fun refresh() {
+        isRefreshing = true
+        scope.launch {
+            delay(1000)
+            isRefreshing = false
+        }
+    }
 
     Column(
         modifier = Modifier

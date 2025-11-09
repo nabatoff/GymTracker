@@ -131,6 +131,12 @@ fun AddExerciseDialog(
     var name by remember { mutableStateOf("") }
     var sets by remember { mutableStateOf("") }
     var reps by remember { mutableStateOf("") }
+    
+    val nameValidation = com.example.gymtracker.util.DataValidator.validateExerciseName(name)
+    val setsValidation = com.example.gymtracker.util.DataValidator.validateSets(sets)
+    val repsValidation = com.example.gymtracker.util.DataValidator.validateReps(reps)
+    
+    val isValid = nameValidation.isValid && setsValidation.isValid && repsValidation.isValid
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -143,30 +149,37 @@ fun AddExerciseDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Название") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !nameValidation.isValid,
+                    supportingText = nameValidation.errorMessage?.let { { Text(it) } }
                 )
                 OutlinedTextField(
                     value = sets,
                     onValueChange = { sets = it },
                     label = { Text("Подходы") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !setsValidation.isValid,
+                    supportingText = setsValidation.errorMessage?.let { { Text(it) } }
                 )
                 OutlinedTextField(
                     value = reps,
                     onValueChange = { reps = it },
                     label = { Text("Повторения") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !repsValidation.isValid,
+                    supportingText = repsValidation.errorMessage?.let { { Text(it) } }
                 )
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    val setsInt = sets.toIntOrNull() ?: 0
-                    if (name.isNotBlank() && setsInt > 0 && reps.isNotBlank()) {
+                    if (isValid) {
+                        val setsInt = sets.toIntOrNull() ?: 0
                         onConfirm(name, setsInt, reps)
                     }
-                }
+                },
+                enabled = isValid
             ) {
                 Text("Добавить")
             }

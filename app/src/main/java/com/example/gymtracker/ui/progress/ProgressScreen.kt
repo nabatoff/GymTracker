@@ -3,6 +3,8 @@ package com.example.gymtracker.ui.progress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,18 +19,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.gymtracker.data.entity.Goal
 import com.example.gymtracker.ui.viewmodel.ProgressViewModel
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgressScreen(
+    navController: NavController? = null,
     viewModel: ProgressViewModel = viewModel()
 ) {
     val goals by viewModel.goals.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -40,12 +38,31 @@ fun ProgressScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Прогресс",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Прогресс",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Row {
+                IconButton(
+                    onClick = { navController?.navigate("advanced_stats") }
+                ) {
+                    Icon(Icons.Default.BarChart, contentDescription = "Расширенная статистика")
+                }
+                IconButton(
+                    onClick = { navController?.navigate("share") }
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = "Поделиться")
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = { showInputDialog = true },
@@ -196,6 +213,14 @@ fun BodyMetricInputDialog(
     var weight by remember { mutableStateOf("") }
     var bodyFat by remember { mutableStateOf("") }
     var muscleMass by remember { mutableStateOf("") }
+    
+    val weightValidation = com.example.gymtracker.util.DataValidator.validateWeight(weight)
+    val bodyFatValidation = com.example.gymtracker.util.DataValidator.validateBodyFat(bodyFat)
+    val muscleMassValidation = com.example.gymtracker.util.DataValidator.validateMuscleMass(muscleMass)
+    
+    val isValid = weightValidation.isValid && 
+                  bodyFatValidation.isValid && 
+                  muscleMassValidation.isValid
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -208,32 +233,41 @@ fun BodyMetricInputDialog(
                     value = weight,
                     onValueChange = { weight = it },
                     label = { Text("Вес (кг)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !weightValidation.isValid,
+                    supportingText = weightValidation.errorMessage?.let { { Text(it) } }
                 )
                 OutlinedTextField(
                     value = bodyFat,
                     onValueChange = { bodyFat = it },
                     label = { Text("Процент жира (%)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !bodyFatValidation.isValid,
+                    supportingText = bodyFatValidation.errorMessage?.let { { Text(it) } }
                 )
                 OutlinedTextField(
                     value = muscleMass,
                     onValueChange = { muscleMass = it },
                     label = { Text("Мышечная масса (кг)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !muscleMassValidation.isValid,
+                    supportingText = muscleMassValidation.errorMessage?.let { { Text(it) } }
                 )
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    val weightFloat = weight.toFloatOrNull()
-                    if (weightFloat != null) {
-                        val bodyFatFloat = bodyFat.toFloatOrNull()
-                        val muscleMassFloat = muscleMass.toFloatOrNull()
-                        onConfirm(weightFloat, bodyFatFloat, muscleMassFloat)
+                    if (isValid) {
+                        val weightFloat = weight.toFloatOrNull()
+                        if (weightFloat != null) {
+                            val bodyFatFloat = bodyFat.toFloatOrNull()
+                            val muscleMassFloat = muscleMass.toFloatOrNull()
+                            onConfirm(weightFloat, bodyFatFloat, muscleMassFloat)
+                        }
                     }
-                }
+                },
+                enabled = isValid
             ) {
                 Text("Сохранить")
             }

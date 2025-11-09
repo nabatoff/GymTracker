@@ -124,6 +124,7 @@ fun AddProgramDialog(
     onConfirm: (String) -> Unit
 ) {
     var programName by remember { mutableStateOf("") }
+    val validation = com.example.gymtracker.util.DataValidator.validateProgramName(programName)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -133,16 +134,19 @@ fun AddProgramDialog(
                 value = programName,
                 onValueChange = { programName = it },
                 label = { Text("Название программы") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = !validation.isValid,
+                supportingText = validation.errorMessage?.let { { Text(it) } }
             )
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (programName.isNotBlank()) {
+                    if (validation.isValid) {
                         onConfirm(programName)
                     }
-                }
+                },
+                enabled = validation.isValid
             ) {
                 Text("Добавить")
             }
