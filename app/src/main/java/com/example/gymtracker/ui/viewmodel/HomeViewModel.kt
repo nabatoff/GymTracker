@@ -4,12 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gymtracker.data.entity.WorkoutSession
 import com.example.gymtracker.data.repository.AppRepository
+import com.example.gymtracker.ui.home.HomeStats
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 data class WorkoutTimerState(
     val isActive: Boolean = false,
@@ -20,6 +21,47 @@ data class WorkoutTimerState(
 class HomeViewModel(private val repository: AppRepository) : ViewModel() {
     private val _timerState = MutableStateFlow(WorkoutTimerState())
     val timerState: StateFlow<WorkoutTimerState> = _timerState.asStateFlow()
+
+    val stats: StateFlow<HomeStats> = combine(
+        repository.getAllSessions(),
+        repository.getAllMetrics()
+    ) { sessions, metrics ->
+        val totalWorkouts = sessions.size
+        
+        // Вычисляем тренировки за месяц локально
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startOfMonth = calendar.timeInMillis
+        
+        calendar.add(Calendar.MONTH, 1)
+        val endOfMonth = calendar.timeInMillis
+        
+        val workoutsThisMonth = sessions.count { 
+            it.startTime >= startOfMonth && it.startTime < endOfMonth 
+        }
+        
+        val totalMinutes = sessions.sumOf { it.durationInMinutes?.toLong() ?: 0L }.toInt()
+        val currentWeight = metrics.firstOrNull()?.weight
+        val lastWorkoutDate = sessions.firstOrNull()?.let {
+            SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(it.startTime))
+        }
+        
+        HomeStats(
+            totalWorkouts = totalWorkouts,
+            workoutsThisMonth = workoutsThisMonth,
+            totalMinutes = totalMinutes,
+            currentWeight = currentWeight,
+            lastWorkoutDate = lastWorkoutDate
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = HomeStats()
+    )
 
     private var timerJob: Job? = null
 
@@ -59,6 +101,7 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
                 durationInMinutes = durationInMinutes
             )
             repository.insertSession(session)
+            // Обновляем статистику после сохранения
         }
 
         _timerState.value = WorkoutTimerState()

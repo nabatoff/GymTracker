@@ -5,6 +5,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,8 +28,24 @@ fun ProgramsScreen(
 ) {
     val programs by viewModel.programs.collectAsStateWithLifecycle(initialValue = emptyList())
     var showAddDialog by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredPrograms = remember(programs, searchQuery) {
+        if (searchQuery.isBlank()) {
+            programs
+        } else {
+            programs.filter { 
+                it.name.contains(searchQuery, ignoreCase = true) 
+            }
+        }
+    }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Программы тренировок") }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true }
@@ -41,40 +59,47 @@ fun ProgramsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Text(
-                text = "Программы тренировок",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(16.dp)
+            // Поиск
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                placeholder = { Text("Поиск программ...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Поиск") },
+                singleLine = true
             )
 
-            if (programs.isEmpty()) {
+            if (filteredPrograms.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Нет программ. Добавьте первую программу!")
+                    Text(
+                        if (searchQuery.isNotBlank()) 
+                            "Программы не найдены" 
+                        else 
+                            "Нет программ. Добавьте первую программу!"
+                    )
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(programs) { program ->
-                        Card(
+                    items(
+                        items = filteredPrograms,
+                        key = { it.programId }
+                    ) { program ->
+                        ProgramCardWithDelete(
+                            program = program,
+                            onDelete = { viewModel.deleteProgram(program) },
                             onClick = {
                                 navController.navigate("program_detail/${program.programId}")
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = program.name,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
+                            }
+                        )
                     }
                 }
             }

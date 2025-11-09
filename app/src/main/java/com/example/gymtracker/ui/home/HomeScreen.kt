@@ -18,59 +18,80 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val timerState by viewModel.timerState.collectAsState()
+    val stats by viewModel.stats.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (timerState.isActive) {
-            Text(
-                text = "Тренировка идет",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 32.dp)
+        // Статистика
+        if (!timerState.isActive) {
+            HomeStatsCard(stats = stats)
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        // Таймер тренировки
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
-
-            Text(
-                text = formatTime(timerState.elapsedSeconds),
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 48.dp)
-            )
-
-            Button(
-                onClick = { viewModel.endWorkout() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Закончить тренировку", fontSize = 18.sp)
-            }
-        } else {
-            Text(
-                text = "Готов к тренировке?",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 48.dp)
-            )
+                if (timerState.isActive) {
+                    Text(
+                        text = "Тренировка идет",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 32.dp)
+                    )
 
-            Button(
-                onClick = { viewModel.startWorkout() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text("Начать тренировку", fontSize = 18.sp)
+                    Text(
+                        text = formatTime(timerState.elapsedSeconds),
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 48.dp)
+                    )
+
+                    Button(
+                        onClick = { viewModel.endWorkout() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Закончить тренировку", fontSize = 18.sp)
+                    }
+                } else {
+                    Text(
+                        text = "Готов к тренировке?",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 48.dp)
+                    )
+
+                    Button(
+                        onClick = { viewModel.startWorkout() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text("Начать тренировку", fontSize = 18.sp)
+                    }
+                }
             }
         }
     }
