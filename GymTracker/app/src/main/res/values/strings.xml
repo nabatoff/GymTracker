@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">GymTracker</string>
+    <string name="nav_home">Главная</string>
+    <string name="nav_programs">Программы</string>
+    <string name="nav_progress">Прогресс</string>
+    <string name="nav_history">История</string>
+</resources>
